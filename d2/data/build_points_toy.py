@@ -1,4 +1,4 @@
-import matplotlib.pylab  as plt
+import matplotlib.pyplot  as plt
 from mpl_toolkits.mplot3d import axes3d, Axes3D
 import functools
 import os
@@ -143,20 +143,52 @@ def get_dict_swiss_roll(name, n_samples, noise, **kwargs):
 
   return dataset_dicts
 
+def get_dict_two_moons(name, n_samples, noise, **kwargs):
+  from sklearn.datasets import make_moons
 
+  data, y = make_moons(n_samples, noise=noise)
+  #plt.scatter(data[:,0],data[:,1])
+  #plt.show()
+  # Make it thinner
+  #data[:, 1] *= 0.5
+  # Normalize to range of [-1, 1]
+  #data = _normalize_data(data)
+
+  data = data.astype(np.float32)
+  pclouds = torch.from_numpy(data)
+  pclouds = pclouds.contiguous()
+
+  meta_dict = {}
+  meta_dict['num_images'] = 1
+  MetadataCatalog.get(name).set(**meta_dict)
+
+  dataset_dicts = []
+
+  record = {}
+
+  record["id"] = 0
+  record["num_samples"] = n_samples
+  record["dim"] = 3
+  record["points"] = pclouds
+  dataset_dicts.append(record)
+
+  return dataset_dicts
 
 
 data_path = "datasets/points/"
 registed_name_list = [
   'swiss_roll_5000',
+  'two_moons_5000'
 ]
 
 registed_func_list = [
   get_dict_swiss_roll,
+  get_dict_two_moons
 ]
 
 kwargs_list = [
   {'n_samples': 5000, 'noise': 0.05},
+  {'n_samples': 5000, 'noise': 0.1},
 ]
 
 for name, func, kwargs in zip(registed_name_list, registed_func_list, kwargs_list):
